@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Entry Form</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .form-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr); /* 3 columns */
+            gap: 10px; /* Space between items */
+            margin-bottom: 20px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            margin-bottom: 5px;
+            font-size: 12px; /* Smaller font size for labels */
+        }
+        .form-group input {
+            width: 100%;
+            padding: 5px;
+            box-sizing: border-box;
+            font-size: 12px; /* Smaller font size for inputs */
+        }
+        .button-container {
+            grid-column: span 3; /* Make buttons span all columns */
+            text-align: center;
+        }
+        .button-container button {
+            padding: 8px 16px;
+            margin: 5px;
+            font-size: 12px; /* Smaller font size for buttons */
+            border: none;
+            cursor: pointer;
+        }
+        .button-container .save-btn {
+            background-color: green;
+            color: white;
+        }
+        .button-container .clear-btn {
+            background-color: red;
+            color: white;
+        }
+        .button-container .getdata-btn {
+            background-color: blue;
+            color: white;
+        }
+        .button-container .download-btn {
+            background-color: orange;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <h2>Data Entry Form</h2>
+    <form id="dataForm">
+        <div class="form-container">
+            <div class="form-group">
+                <label for="name">Name:</label>
+                <input type="text" id="name" name="name">
+            </div>
+            <div class="form-group">
+                <label for="age">Age:</label>
+                <input type="text" id="age" name="age">
+            </div>
+            <div class="form-group">
+                <label for="location">Location:</label>
+                <input type="text" id="location" name="location">
+            </div>
+
+            <div class="button-container">
+                <button type="button" class="save-btn" onclick="submitForm()">Save</button>
+                <button type="button" class="clear-btn" onclick="clearForm()">Clear</button>
+                <button type="button" class="getdata-btn" onclick="getData()">Get Data</button>
+                <button type="button" class="download-btn" onclick="downloadCSV()">Download CSV</button>
+            </div>
+        </div>
+    </form>
+
+    <script>
+        function submitForm() {
+            const formData = new FormData(document.getElementById('dataForm'));
+            const data = {};
+            formData.forEach((value, key) => {
+                data[key] = value;
+            });
+
+            fetch('http://127.0.0.1:5000/submit_form', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            })
+            .then(response => response.json())
+            .then(result => {
+                alert('Data saved successfully!');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        function clearForm() {
+            document.getElementById('dataForm').reset();
+        }
+
+        function getData() {
+            fetch('http://127.0.0.1:5000/get_data')
+                .then(response => response.json())
+                .then(data => {
+                    if (data) {
+                        Object.keys(data).forEach(key => {
+                            if (document.getElementById(key)) {
+                                document.getElementById(key).value = data[key];
+                            }
+                        });
+                    } else {
+                        alert('No data found!');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+
+        function downloadCSV() {
+            fetch('http://127.0.0.1:5000/download_csv')
+                .then(response => response.blob())
+                .then(blob => {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'data.csv';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+    </script>
+</body>
+</html>
